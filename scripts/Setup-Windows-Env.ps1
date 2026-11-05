@@ -152,6 +152,28 @@ Write-Step 'Cai dat pyannote.audio (tao style vector)'
 Write-Step 'Cai dat faster-whisper (chep loi thoai)'
 & $VenvPython -m pip install 'faster-whisper==1.2.1' 'av==16.1.0'
 
+# ------------------------------------------------------- 4c. ffmpeg / ffprobe
+# The WebUI's audio input uses gradio -> pydub -> ffprobe. Without ffprobe on
+# PATH, uploading anything but a plain WAV file fails with
+# "Cannot load audio from file: `ffprobe` not found".
+Write-Step 'Cai dat ffmpeg (doc file audio trong WebUI)'
+if (Get-Command ffprobe -ErrorAction SilentlyContinue) {
+    Write-Note 'ffprobe da co san, bo qua'
+} elseif (Get-Command winget -ErrorAction SilentlyContinue) {
+    & winget install --id Gyan.FFmpeg --exact `
+        --accept-package-agreements --accept-source-agreements --disable-interactivity
+    # winget only updates PATH for new shells, so the link folder is added here.
+    $ffLink = Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Links'
+    if (Test-Path $ffLink) {
+        $env:Path = "$ffLink;$env:Path"
+    }
+} else {
+    Write-Note 'Khong co winget. Cai ffmpeg thu cong va them vao PATH: https://ffmpeg.org/download.html'
+}
+if (-not (Get-Command ffprobe -ErrorAction SilentlyContinue)) {
+    throw 'Khong tim thay ffprobe. Cai ffmpeg va them vao PATH roi chay lai script nay.'
+}
+
 # -------------------------------------------------------------------- 5. models
 if ($SkipModels) {
     Write-Step 'Bo qua viec tai model (--SkipModels)'
@@ -186,6 +208,8 @@ print("    gloo : OK")
 dist.destroy_process_group()
 import pyannote.audio
 print("    pyannote.audio", pyannote.audio.__version__, ": OK")
+from pydub.utils import which
+print("    ffprobe:", which("ffprobe") or "NOT FOUND")
 '@
 $verify | & $VenvPython -
 if ($LASTEXITCODE -ne 0) {
