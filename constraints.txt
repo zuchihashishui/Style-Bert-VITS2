@@ -1,0 +1,17 @@
+# Constraints for Python 3.12 compatibility
+numpy<2
+transformers<4.50,>=4.30  # >=4.50 refuses torch.load .bin files on torch<2.6 (CVE-2025-32434)
+gradio>=4.32,<5.0
+scipy<1.14
+pandas<3.0
+librosa==0.9.2
+nltk<=3.8.1
+setuptools<81  # librosa 0.9.2 needs pkg_resources
+pydantic<2.11  # gradio 4.44 api_info crashes with pydantic>=2.11
+fastapi<0.116
+starlette<0.47  # starlette 1.x removed old TemplateResponse(name, ctx) used by gradio 4.44
+# Skip packages incompatible with Python 3.12
+# faster-whisper (numba issues)
+# stable_ts (depends on faster-whisper)
+# pyannote.audio (numba issues)
+# (umap-learn installs fine; needed by app.py style vectors tab)
