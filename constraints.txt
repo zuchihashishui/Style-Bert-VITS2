@@ -10,8 +10,17 @@ setuptools<81  # librosa 0.9.2 needs pkg_resources
 pydantic<2.11  # gradio 4.44 api_info crashes with pydantic>=2.11
 fastapi<0.116
 starlette<0.47  # starlette 1.x removed old TemplateResponse(name, ctx) used by gradio 4.44
+av==16.1.0  # faster-whisper 1.2.1 uses av.open(metadata_errors=...), removed in av>=17
 # Skip packages incompatible with Python 3.12
 # faster-whisper (numba issues)
 # stable_ts (depends on faster-whisper)
-# pyannote.audio (numba issues)
 # (umap-learn installs fine; needed by app.py style vectors tab)
+#
+# pyannote.audio is installed with explicit pins by scripts/Setup-Windows-Env.ps1
+# instead of being resolved from requirements.txt: unpinned 3.x pulls
+# pytorch-metric-learning (needs torch>=2.14) and numpy>=2, which breaks the
+# numpy<2 pin and the pinned torch build.
+#
+# torch is pinned to 2.7.1+cu128 on RTX 50 series (see Setup-Windows-Env.ps1):
+# from 2.8 onwards the official Windows wheels have no working gloo transport,
+# which breaks torch.distributed on Windows (pytorch/pytorch#150381).
