@@ -297,9 +297,23 @@ class TTSModel:
                     "pyannote.audio is required to infer style vector from audio"
                 )
 
-            # スタイルベクトルを取得するための推論モデルを初期化
+            # PyTorch 2.6 以降、torch.load の weights_only がデフォルトで True になったため、
+            # pyannote の重み (Specifications などのクラスを含む) が読み込めなくなった。
+            # 公式配布の重みのみを読むため、必要なクラスだけを allowlist 登録する。
             import torch
+            from pyannote.audio.core import task as pyannote_task
 
+            torch.serialization.add_safe_globals(
+                [
+                    torch.torch_version.TorchVersion,
+                    pyannote_task.Specifications,
+                    pyannote_task.Problem,
+                    pyannote_task.Resolution,
+                    pyannote_task.Task,
+                ]
+            )
+
+            # スタイルベクトルを取得するための推論モデルを初期化
             self.style_vector_inference = pyannote.audio.Inference(
                 model=pyannote.audio.Model.from_pretrained(
                     "pyannote/wespeaker-voxceleb-resnet34-LM"

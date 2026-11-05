@@ -6,6 +6,7 @@ import numpy as np
 import torch
 from numpy.typing import NDArray
 from pyannote.audio import Inference, Model
+from pyannote.audio.core import task as pyannote_task
 from tqdm import tqdm
 
 from config import get_config
@@ -15,17 +16,16 @@ from style_bert_vits2.utils.stdout_wrapper import SAFE_STDOUT
 
 # PyTorch 2.6 以降、torch.load の weights_only がデフォルトで True になったため、
 # pyannote の重み (Specifications などのクラスを含む) が読み込めなくなった。
-# 公式配布の重みのみを読むスクリプトなので、ここでは weights_only=False を既定にする。
-_original_torch_load = torch.load
-
-
-def _torch_load_trusted(*args, **kwargs):
-    kwargs["weights_only"] = False
-    return _original_torch_load(*args, **kwargs)
-
-
-torch.load = _torch_load_trusted  # type: ignore[assignment]
-
+# 公式配布の重みのみを読むため、必要なクラスだけを allowlist 登録する。
+torch.serialization.add_safe_globals(
+    [
+        torch.torch_version.TorchVersion,
+        pyannote_task.Specifications,
+        pyannote_task.Problem,
+        pyannote_task.Resolution,
+        pyannote_task.Task,
+    ]
+)
 
 config = get_config()
 
